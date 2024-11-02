@@ -64,6 +64,7 @@
 #include "llvm/TargetParser/RISCVISAInfo.h"
 #include "llvm/TargetParser/RISCVTargetParser.h"
 #include <cctype>
+#include <iostream>
 
 using namespace clang::driver;
 using namespace clang::driver::tools;
@@ -8092,6 +8093,22 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     const char *FuzzComponentsArg =
         Args.MakeArgStringRef(FuzzComponentsArgStr + FuzzOptions.data());
     CmdArgs.push_back(FuzzComponentsArg);
+
+    for (const auto &ActualOpt : ActualOpts) {
+      if (ActualOpt.str() == "bpu" || ActualOpt.str() == "all") {
+        // Invoke the HotColdSplitting pass, unless otherwise specified
+        bool ShouldEnableHCS = true;
+        for (Arg *A : Args.filtered(options::OPT_mllvm)) {
+          if (strcmp(A->getValue(), "-hot-cold-split=false") == 0)
+            ShouldEnableHCS = false;
+        }
+        if (ShouldEnableHCS) {
+          CmdArgs.push_back("-mllvm");
+          CmdArgs.push_back("-hot-cold-split=true");
+        }
+        break;
+      }
+    }
 
     StringRef FuzzSeedStr = Args.getLastArgValue(options::OPT_fseed_EQ).trim();
     int64_t SeedValue;
