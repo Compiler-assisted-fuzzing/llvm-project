@@ -142,21 +142,23 @@ namespace llvm {
           GuaranteedTailCallOpt(false), StackSymbolOrdering(true),
           EnableFastISel(false), EnableGlobalISel(false), UseInitArray(false),
           DisableIntegratedAS(false), FunctionSections(false),
-          DataSections(false), IgnoreXCOFFVisibility(false),
-          XCOFFTracebackTable(true), UniqueSectionNames(true),
-          UniqueBasicBlockSectionNames(false), SeparateNamedSections(false),
-          TrapUnreachable(false), NoTrapAfterNoreturn(false), TLSSize(0),
-          EmulatedTLS(false), EnableTLSDESC(false), EnableIPRA(false),
-          EmitStackSizeSection(false), EnableMachineOutliner(false),
-          EnableMachineFunctionSplitter(false), SupportsDefaultOutlining(false),
-          EmitAddrsig(false), BBAddrMap(false), EmitCallSiteInfo(false),
+          DataSections(false), NoopInsertion(false),
+          IgnoreXCOFFVisibility(false), XCOFFTracebackTable(true),
+          UniqueSectionNames(true), UniqueBasicBlockSectionNames(false),
+          SeparateNamedSections(false), TrapUnreachable(false),
+          NoTrapAfterNoreturn(false), TLSSize(0),
+          EmulatedTLS(false), EnableTLSDESC(false),
+          EnableIPRA(false), EmitStackSizeSection(false),
+          EnableMachineOutliner(false), EnableMachineFunctionSplitter(false),
+          SupportsDefaultOutlining(false), EmitAddrsig(false),
+          BBAddrMap(false), EmitCallSiteInfo(false),
           SupportsDebugEntryValues(false), EnableDebugEntryValues(false),
           ValueTrackingVariableLocations(false), ForceDwarfFrameSection(false),
-          XRayFunctionIndex(true), DebugStrictDwarf(false), Hotpatch(false),
-          PPCGenScalarMASSEntries(false), JMCInstrument(false),
-          EnableCFIFixup(false), MisExpect(false), XCOFFReadOnlyPointers(false),
-          VerifyArgABICompliance(true),
-          FPDenormalMode(DenormalMode::IEEE, DenormalMode::IEEE) {}
+          XRayFunctionIndex(true), DebugStrictDwarf(false),
+          Hotpatch(false), PPCGenScalarMASSEntries(false),
+          JMCInstrument(false), EnableCFIFixup(false),
+          MisExpect(false), XCOFFReadOnlyPointers(false),
+          VerifyArgABICompliance(true), FPDenormalMode(DenormalMode::IEEE, DenormalMode::IEEE) {}
 
     /// DisableFramePointerElim - This returns true if frame pointer elimination
     /// optimization should be disabled for the given machine function.
@@ -271,6 +273,10 @@ namespace llvm {
 
     /// Emit data into separate sections.
     unsigned DataSections : 1;
+
+    /// Randomly insert noop instructions to create fine-grained code
+    /// layout diversity.
+    unsigned NoopInsertion : 1;
 
     /// Do not emit visibility attribute for xcoff.
     unsigned IgnoreXCOFFVisibility : 1;

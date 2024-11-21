@@ -104,6 +104,8 @@ std::optional<bool> getExplicitDataSections();
 bool getFunctionSections();
 std::optional<bool> getExplicitFunctionSections();
 
+bool getNoopInsertion();
+
 bool getIgnoreXCOFFVisibility();
 
 bool getXCOFFTracebackTable();

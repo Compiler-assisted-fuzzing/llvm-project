@@ -79,6 +79,15 @@ void TargetInstrInfo::insertNoops(MachineBasicBlock &MBB,
     insertNoop(MBB, MI);
 }
 
+/// insertNoop - Insert a type of noop into the instruction stream at the
+/// specified point to introduce fine-grained diversity. A target may randomly
+/// choose from a pool of valid noops using the provided RNG.
+void TargetInstrInfo::insertNoop(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MI,
+                                 RandomNumberGenerator&) const {
+  insertNoop(MBB, MI);
+}
+
 static bool isAsmComment(const char *Str, const MCAsmInfo &MAI) {
   return strncmp(Str, MAI.getCommentString().data(),
                  MAI.getCommentString().size()) == 0;

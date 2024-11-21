@@ -87,6 +87,7 @@ CGOPT(bool, UseCtors)
 CGOPT(bool, DisableIntegratedAS)
 CGOPT_EXP(bool, DataSections)
 CGOPT_EXP(bool, FunctionSections)
+CGOPT(bool, NoopInsertion)
 CGOPT(bool, IgnoreXCOFFVisibility)
 CGOPT(bool, XCOFFTracebackTable)
 CGOPT(bool, EnableBBAddrMap)
@@ -375,6 +376,11 @@ codegen::RegisterCodeGenFlags::RegisterCodeGenFlags() {
       cl::init(false));
   CGBINDOPT(FunctionSections);
 
+  static cl::opt<bool> NoopInsertion(
+      "noop-insertion", cl::desc("Randomly add Noop instructions to create fine-grained code layout diversity."),
+      cl::init(false));
+  CGBINDOPT(NoopInsertion);
+
   static cl::opt<bool> IgnoreXCOFFVisibility(
       "ignore-xcoff-visibility",
       cl::desc("Not emit the visibility attribute for asm in AIX OS or give "
@@ -573,6 +579,7 @@ codegen::InitTargetOptionsFromCodeGenFlags(const Triple &TheTriple) {
   Options.DataSections =
       getExplicitDataSections().value_or(TheTriple.hasDefaultDataSections());
   Options.FunctionSections = getFunctionSections();
+  Options.NoopInsertion = getNoopInsertion();
   Options.IgnoreXCOFFVisibility = getIgnoreXCOFFVisibility();
   Options.XCOFFTracebackTable = getXCOFFTracebackTable();
   Options.BBAddrMap = getEnableBBAddrMap();

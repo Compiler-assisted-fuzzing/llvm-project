@@ -2142,6 +2142,7 @@ def fdiscard_value_names : Flag<["-"], "fdiscard-value-names">,
 def fno_discard_value_names : Flag<["-"], "fno-discard-value-names">,
   Group<f_clang_Group>, Visibility<[ClangOption, DXCOption]>,
   HelpText<"Do not discard value names in LLVM IR">;
+def fdiversify : Flag<["-"], "fdiversify">, Group<f_clang_Group>;
 defm dollars_in_identifiers : BoolFOption<"dollars-in-identifiers",
   LangOpts<"DollarIdents">, Default<!strconcat("!", asm_preprocessor.KeyPath)>,
   PosFlag<SetTrue, [], [ClangOption], "Allow">,
@@ -3819,7 +3820,7 @@ def framework : Separate<["-"], "framework">, Flags<[LinkerInput]>;
 def reexport_framework : Separate<["-"], "reexport_framework">, Flags<[LinkerInput]>;
 def reexport_l : Joined<["-"], "reexport-l">, Flags<[LinkerInput]>;
 def reexport_library : JoinedOrSeparate<["-"], "reexport_library">, Flags<[LinkerInput]>;
-def frandom_seed_EQ : Joined<["-"], "frandom-seed=">, Group<clang_ignored_f_Group>;
+def frandom_seed_EQ : Joined<["-"], "frandom-seed=">, Group<f_Group>, Visibility<[ClangOption, CC1Option]>;
 def freg_struct_return : Flag<["-"], "freg-struct-return">, Group<f_Group>,
   Visibility<[ClangOption, CC1Option]>,
   HelpText<"Override the default ABI to return small structs in registers">;
@@ -7327,6 +7328,8 @@ def no_struct_path_tbaa : Flag<["-"], "no-struct-path-tbaa">,
   MarshallingInfoNegativeFlag<CodeGenOpts<"StructPathTBAA">>;
 def new_struct_path_tbaa : Flag<["-"], "new-struct-path-tbaa">,
   HelpText<"Enable enhanced struct-path aware Type Based Alias Analysis">;
+def noop_insertion : Flag<["-"], "noop-insertion">,
+  HelpText<"Randomly insert NOOPs">;
 def mdebug_pass : Separate<["-"], "mdebug-pass">,
   HelpText<"Enable additional debug output">,
   MarshallingInfoString<CodeGenOpts<"DebugPass">>;
