@@ -1702,6 +1702,9 @@ void CompilerInvocationBase::GenerateCodeGenArgs(const CodeGenOptions &Opts,
   if (Opts.EmulatedTLS)
     GenerateArg(Consumer, OPT_femulated_tls);
 
+  if (Opts.NoopInsertion)
+    GenerateArg(Consumer, OPT_noop_insertion);
+
   if (Opts.FPDenormalMode != llvm::DenormalMode::getIEEE())
     GenerateArg(Consumer, OPT_fdenormal_fp_math_EQ, Opts.FPDenormalMode.str());
 
@@ -2056,6 +2059,8 @@ bool CompilerInvocation::ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args,
     }
     Opts.LinkBitcodeFiles.push_back(F);
   }
+
+  Opts.NoopInsertion = Args.hasArg(OPT_noop_insertion);
 
   if (Arg *A = Args.getLastArg(OPT_fdenormal_fp_math_EQ)) {
     StringRef Val = A->getValue();

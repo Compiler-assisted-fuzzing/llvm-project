@@ -34,6 +34,7 @@
 #include "llvm/MC/MCInstBuilder.h"
 #include "llvm/MC/TargetRegistry.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/RandomNumberGenerator.h"
 
 using namespace llvm;
 
@@ -1158,6 +1159,35 @@ void RISCVInstrInfo::insertIndirectBranch(MachineBasicBlock &MBB,
 
   MRI.replaceRegWith(ScratchReg, TmpGPR);
   MRI.clearVirtRegs();
+}
+
+void RISCVInstrInfo::insertNoop(MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator MI) const {
+  DebugLoc DL;
+  BuildMI(MBB, MI, DL, get(RISCV::ADDI), RISCV::X0).addReg(RISCV::X0).addImm(0);
+}
+
+/// insertNoop - Insert a randomly chosen type of noop into the instruction
+/// stream at the specified point to introduce fine-grained diversity.
+void RISCVInstrInfo::insertNoop(MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator MI,
+                              RandomNumberGenerator &RNG) const {
+  enum {
+    NOP,    // 00 00 00 13
+    MOV_X8, // 00 04 04 13
+    MOV_X2, // 00 01 01 13
+    MAX_NOPS
+  };
+  static const unsigned NopRegs[MAX_NOPS] = {0, RISCV::X8, RISCV::X2,};
+  std::uniform_int_distribution<unsigned> Distribution(0, MAX_NOPS - 1);
+  unsigned Type = Distribution(RNG);
+  DebugLoc DL;
+  unsigned Reg = NopRegs[Type];
+  if (Type == NOP) {
+    BuildMI(MBB, MI, DL, get(RISCV::ADDI), RISCV::X0).addReg(RISCV::X0).addImm(0);
+  } else {
+    copyPhysReg(MBB, MI, DL, Reg, Reg, false);
+  }
 }
 
 bool RISCVInstrInfo::reverseBranchCondition(

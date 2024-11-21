@@ -98,6 +98,7 @@ void llvm::initializeCodeGen(PassRegistry &Registry) {
   initializeMachineUniformityAnalysisPassPass(Registry);
   initializeMachineUniformityInfoPrinterPassPass(Registry);
   initializeMachineVerifierLegacyPassPass(Registry);
+  initializeNoopInsertionPass(Registry);
   initializeObjCARCContractLegacyPassPass(Registry);
   initializeOptimizePHIsPass(Registry);
   initializePEIPass(Registry);

@@ -24,8 +24,12 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/CompilerAssistedFuzzing/FuzzInfo.h"
 
 using namespace llvm;
+
+#define DEBUG_TYPE "riscvasmbackend"
+ALWAYS_ENABLED_STATISTIC(RelaxAllBranchesFuzzStat, "RISCVAsmBackend::fixupNeedsRelaxationAdvanced fuzz");
 
 static cl::opt<bool> RelaxBranches("riscv-asm-relax-branches", cl::init(true),
                                    cl::Hidden);
@@ -168,6 +172,12 @@ bool RISCVAsmBackend::fixupNeedsRelaxationAdvanced(
   case RISCV::fixup_riscv_branch:
     // For conditional branch instructions the immediate must be
     // in the range [-4096, 4095].
+    // Fuzz only: always emit a branch instruction as:
+    // - Inverted conditional branch
+    // - Unconditional jump
+    if (isFuzzed(fuzz::BPU, RelaxAllBranchesFuzzStat)) {
+      return true;
+    }
     return !isInt<13>(Offset);
   }
 }

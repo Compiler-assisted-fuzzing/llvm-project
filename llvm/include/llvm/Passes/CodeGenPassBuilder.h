@@ -48,6 +48,7 @@
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/MachinePassManager.h"
 #include "llvm/CodeGen/MachineVerifier.h"
+#include "llvm/CodeGen/NoopInsertion.h"
 #include "llvm/CodeGen/PHIElimination.h"
 #include "llvm/CodeGen/PreISelIntrinsicLowering.h"
 #include "llvm/CodeGen/RegAllocFast.h"
@@ -951,6 +952,9 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
 
   // GC
   derived().addGCPasses(addPass);
+
+  if (TM.Options.NoopInsertion)
+    addPass(NoopInsertionPass());
 
   // Basic block placement.
   if (getOptLevel() != CodeGenOptLevel::None)

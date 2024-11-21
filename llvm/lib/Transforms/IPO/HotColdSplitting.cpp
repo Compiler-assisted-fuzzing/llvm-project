@@ -35,6 +35,7 @@
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/CompilerAssistedFuzzing/FuzzInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -62,6 +63,18 @@
 
 STATISTIC(NumColdRegionsFound, "Number of cold regions found.");
 STATISTIC(NumColdRegionsOutlined, "Number of cold regions outlined.");
+ALWAYS_ENABLED_STATISTIC(CostForArgMaterializationFuzzStat,
+                         "Use TCC_Free for CostForArgMaterialization");
+ALWAYS_ENABLED_STATISTIC(CostForRegionOutputFuzzStat,
+                         "Use TCC_Free for CostForRegionOutput");
+ALWAYS_ENABLED_STATISTIC(FuzzPenaltyMulFuzzStat,
+                         "Use TCC_Free for FuzzPenaltyMul");
+ALWAYS_ENABLED_STATISTIC(SplittingThresholdFuzzStat,
+                         "Increase the SplittingThreshold");
+ALWAYS_ENABLED_STATISTIC(MaxParametersForSplitFuzzStat,
+                         "Increase the MaxParametersForSplit");
+ALWAYS_ENABLED_STATISTIC(ColdBranchProbDenomFuzzStat,
+                         "Increase the ColdBranchProbDenom");
 
 using namespace llvm;
 
@@ -358,7 +371,8 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
                       << MaxParametersForSplit << ")\n");
     return std::numeric_limits<int>::max();
   }
-  const int CostForArgMaterialization = 2 * TargetTransformInfo::TCC_Basic;
+  const int CostForArgMaterialization = isFuzzed(fuzz::BPU, CostForArgMaterializationFuzzStat) ?
+                                         TargetTransformInfo::TCC_Free : 2 * TargetTransformInfo::TCC_Basic;
   LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumParams << " params\n");
   Penalty += CostForArgMaterialization * NumParams;
 
@@ -366,7 +380,8 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
   // reload in the caller. Also penalize the associated store in the callee.
   LLVM_DEBUG(dbgs() << "Applying penalty for: " << NumOutputsAndSplitPhis
                     << " outputs/split phis\n");
-  const int CostForRegionOutput = 3 * TargetTransformInfo::TCC_Basic;
+  const int CostForRegionOutput = isFuzzed(fuzz::BPU, CostForRegionOutputFuzzStat) ?
+                                   TargetTransformInfo::TCC_Free : 3 * TargetTransformInfo::TCC_Basic;
   Penalty += CostForRegionOutput * NumOutputsAndSplitPhis;
 
   // Apply a `noreturn` bonus.
@@ -381,7 +396,9 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
   if (SuccsOutsideRegion.size() > 1) {
     LLVM_DEBUG(dbgs() << "Applying penalty for: " << SuccsOutsideRegion.size()
                       << " non-region successors\n");
-    Penalty += (SuccsOutsideRegion.size() - 1) * TargetTransformInfo::TCC_Basic;
+    auto FuzzPenaltyMul = isFuzzed(fuzz::BPU, FuzzPenaltyMulFuzzStat) ?
+                                   TargetTransformInfo::TCC_Free : TargetTransformInfo::TCC_Basic;
+    Penalty += (SuccsOutsideRegion.size() - 1) * FuzzPenaltyMul;
   }
 
   return Penalty;
@@ -777,6 +794,18 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
 bool HotColdSplitting::run(Module &M) {
   bool Changed = false;
   bool HasProfileSummary = (M.getProfileSummary(/* IsCS */ false) != nullptr);
+
+  // Easy conditions for function splitting
+  SplittingThreshold = isFuzzed(fuzz::BPU, SplittingThresholdFuzzStat) ? 1 : 2;
+  MaxParametersForSplit = fuzzedIntRange(fuzz::BPU, MaxParametersForSplitFuzzStat,
+                                      /*from=*/5, /*to=*/10, /*default=*/4);
+
+  // Increase the ColdProbThresh from 1/100
+  // Note: this is used when analysing profile data, so it probably
+  // won't be used a lot, but just in case I'll leave it here
+  ColdBranchProbDenom = fuzzedIntRange(fuzz::BPU, ColdBranchProbDenomFuzzStat,
+                                      /*from=*/10, /*to=*/50, /*default=*/100);
+
   for (Function &F : M) {
     // Do not touch declarations.
     if (F.isDeclaration())

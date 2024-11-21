@@ -64,6 +64,7 @@
 #include "llvm/TargetParser/RISCVISAInfo.h"
 #include "llvm/TargetParser/RISCVTargetParser.h"
 #include <cctype>
+#include <iostream>
 
 using namespace clang::driver;
 using namespace clang::driver::tools;
@@ -6960,6 +6961,17 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
   Args.addOptOutFlag(CmdArgs, options::OPT_mstack_arg_probe,
                      options::OPT_mno_stack_arg_probe);
 
+  // Translate -frandom-seed to seed the LLVM RNG
+  if (Args.hasArg(options::OPT_frandom_seed_EQ)) {
+    StringRef seed = Args.getLastArgValue(options::OPT_frandom_seed_EQ);
+    CmdArgs.push_back("-mllvm");
+    CmdArgs.push_back(Args.MakeArgString("-rng-seed=" + seed));
+  }
+
+  if (Args.hasArg(options::OPT_fdiversify)) {
+    CmdArgs.push_back("-noop-insertion");
+  }
+
   if (Arg *A = Args.getLastArg(options::OPT_mrestrict_it,
                                options::OPT_mno_restrict_it)) {
     if (A->getOption().matches(options::OPT_mrestrict_it)) {
@@ -8081,6 +8093,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     llvm::SmallVector<StringRef> CorrectOpts = {
         "all", "scheduler", "mbb-placement", "regalloc", "isel", "alloca", "bpu"};
 
+    // TODO: Two following for-loops can be combined.
     for (const auto &ActualOpt : ActualOpts)
       if (llvm::find(CorrectOpts, ActualOpt) == CorrectOpts.end())
         D.Diag(diag::err_analyzer_checker_option_unknown)
@@ -8092,6 +8105,23 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     const char *FuzzComponentsArg =
         Args.MakeArgStringRef(FuzzComponentsArgStr + FuzzOptions.data());
     CmdArgs.push_back(FuzzComponentsArg);
+
+    for (const auto &ActualOpt : ActualOpts) {
+      if (ActualOpt.str() == "bpu" || ActualOpt.str() == "all") {
+        // Invoke the HotColdSplitting pass, unless otherwise specified
+        bool ShouldEnableHCS = true;
+        for (Arg *A : Args.filtered(options::OPT_mllvm)) {
+          if (strcmp(A->getValue(), "-hot-cold-split=false") == 0)
+            ShouldEnableHCS = false;
+        }
+        if (ShouldEnableHCS) {
+          CmdArgs.push_back("-mllvm");
+          CmdArgs.push_back("-hot-cold-split=true");
+        }
+        CmdArgs.push_back("-noop-insertion");
+        break;
+      }
+    }
 
     StringRef FuzzSeedStr = Args.getLastArgValue(options::OPT_fseed_EQ).trim();
     int64_t SeedValue;

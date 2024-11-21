@@ -219,6 +219,7 @@ void initializeMergeICmpsLegacyPassPass(PassRegistry &);
 void initializeModuleSummaryIndexWrapperPassPass(PassRegistry &);
 void initializeModuloScheduleTestPass(PassRegistry &);
 void initializeNaryReassociateLegacyPassPass(PassRegistry &);
+void initializeNoopInsertionPass(PassRegistry&);
 void initializeObjCARCContractLegacyPassPass(PassRegistry &);
 void initializeOptimizationRemarkEmitterWrapperPassPass(PassRegistry &);
 void initializeOptimizePHIsPass(PassRegistry &);

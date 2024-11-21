@@ -52,6 +52,7 @@ class MCAsmInfo;
 class MCInst;
 struct MCSchedModel;
 class Module;
+class RandomNumberGenerator;
 class ScheduleDAG;
 class ScheduleDAGMI;
 class ScheduleHazardRecognizer;
@@ -1589,6 +1590,13 @@ public:
   virtual void insertNoops(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MI,
                            unsigned Quantity) const;
+
+  /// insertNoop - Insert a type of noop into the instruction stream at the
+  /// specified point to introduce fine-grained diversity. A target may randomly
+  /// choose from a pool of valid noops using the provided RNG.
+  virtual void insertNoop(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator MI,
+                           RandomNumberGenerator&) const;
 
   /// Return the noop instruction to use for a noop.
   virtual MCInst getNop() const;
