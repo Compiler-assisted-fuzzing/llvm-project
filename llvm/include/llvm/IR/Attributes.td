@@ -89,6 +89,9 @@ def NoUndef : EnumAttr<"noundef", [ParamAttr, RetAttr]>;
 /// Marks function as being in a cold path.
 def Cold : EnumAttr<"cold", [FnAttr]>;
 
+/// Marks function as extracted by BasicBlocksExtraction pass.
+def Extracted : EnumAttr<"extracted", [FnAttr]>;
+
 /// Can only be moved to control-equivalent blocks.
 def Convergent : EnumAttr<"convergent", [FnAttr]>;
 
