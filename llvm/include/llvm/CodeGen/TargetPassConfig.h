@@ -459,6 +459,8 @@ protected:
   /// Add standard basic block placement passes.
   virtual void addBlockPlacement();
 
+  virtual void addBlockShuffling();
+
   /// This pass may be implemented by targets that want to run passes
   /// immediately before machine code is emitted.
   virtual void addPreEmitPass() { }

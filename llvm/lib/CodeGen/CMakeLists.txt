@@ -107,6 +107,7 @@ add_llvm_component_library(LLVMCodeGen
   MachineBasicBlock.cpp
   MachineBlockFrequencyInfo.cpp
   MachineBlockPlacement.cpp
+  MachineBlockShuffling.cpp
   MachineBranchProbabilityInfo.cpp
   MachineCFGPrinter.cpp
   MachineCombiner.cpp

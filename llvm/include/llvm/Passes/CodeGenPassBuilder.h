@@ -453,6 +453,8 @@ protected:
   /// Add standard basic block placement passes.
   void addBlockPlacement(AddMachinePass &) const;
 
+  void addBlockShuffling(AddMachinePass &) const;
+
   using CreateMCStreamer =
       std::function<Expected<std::unique_ptr<MCStreamer>>(MCContext &)>;
   void addAsmPrinter(AddMachinePass &, CreateMCStreamer) const {
@@ -960,6 +962,8 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   if (getOptLevel() != CodeGenOptLevel::None)
     derived().addBlockPlacement(addPass);
 
+  derived().addBlockShuffling(addPass);
+
   // Insert before XRay Instrumentation.
   addPass(FEntryInserterPass());
 
@@ -1183,6 +1187,12 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockPlacement(
   // Run a separate pass to collect block placement statistics.
   if (Opt.EnableBlockPlacementStats)
     addPass(MachineBlockPlacementStatsPass());
+}
+
+template <typename Derived, typename TargetMachineT>
+void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockShuffling(
+    AddMachinePass &addPass) const {
+  addPass(MachineBlockShufflingPass());
 }
 
 } // namespace llvm
