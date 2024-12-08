@@ -44,6 +44,7 @@
 #include "llvm/CompilerAssistedFuzzing/FuzzInfo.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Module.h"
 #include "llvm/IR/PrintPasses.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
@@ -55,6 +56,7 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/RandomNumberGenerator.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Utils/CodeLayout.h"
 #include <algorithm>
@@ -62,6 +64,7 @@
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <random>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -77,11 +80,11 @@ static cl::opt<bool>
                        cl::init(false), cl::Hidden);
 
 ALWAYS_ENABLED_STATISTIC(NumBlockShufflingEntry, "Number of times MachineBlockShuffling was called");
+ALWAYS_ENABLED_STATISTIC(NumBasicBlocksShuffled, "Amount of machine basic blocks were shuffled");
 
 
 namespace llvm {
-
-
+  class RandomNumberGenerator;
 }
 
 namespace {
@@ -95,6 +98,9 @@ public:
   }
 
   bool runOnMachineFunction(MachineFunction &F) override;
+
+private:
+  std::unique_ptr<RandomNumberGenerator> RNG;
 };
 
 }
@@ -107,6 +113,14 @@ INITIALIZE_PASS_BEGIN(MachineBlockShuffling, DEBUG_TYPE,
                       "Shuffle basic blocks", false, false)
 INITIALIZE_PASS_END(MachineBlockShuffling, DEBUG_TYPE,
                     "Shuffle basic blocks", false, false)
+
+
+template<typename Iter, typename RandomGenerator>
+static Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
+    std::uniform_int_distribution<> dis(0, std::distance(start, end) - 1);
+    std::advance(start, dis(g));
+    return start;
+}
 
 bool MachineBlockShuffling::runOnMachineFunction(MachineFunction &MF) {
   if (skipFunction(MF.getFunction()))
@@ -121,6 +135,32 @@ bool MachineBlockShuffling::runOnMachineFunction(MachineFunction &MF) {
     }
 
     NumBlockShufflingEntry++;
+
+    if (!RNG) {
+      RNG = std::move(MF.getFunction().getParent()->createRNG("MBB_shuffling"));
+    }
+
+
+    std::vector<MachineBasicBlock*> blocks{};
+    blocks.reserve(MF.size());
+
+    std::for_each(MF.begin()++, MF.end(), [&blocks](MachineBasicBlock &bb){ blocks.push_back(&bb); });
+    std::shuffle(blocks.begin() + 1, blocks.end(), *RNG);
+
+    for (size_t i = 0; i < blocks.size(); i++) {
+      if (blocks[i] != MF.getBlockNumbered(i)) {
+        NumBasicBlocksShuffled++;
+      }
+    }
+
+    DenseMap<const MachineBasicBlock*, size_t> newIndices;
+    for (const MachineBasicBlock *MBB : blocks) {
+      newIndices[MBB] = newIndices.size();
+    }
+
+    MF.sort([&](MachineBasicBlock &L, MachineBasicBlock &R) {
+      return newIndices[&L] < newIndices[&R];
+    });
 
     return true;
 
