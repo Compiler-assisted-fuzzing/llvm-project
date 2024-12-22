@@ -130,11 +130,9 @@ bool MachineBlockShuffling::runOnMachineFunction(MachineFunction &MF) {
   if (std::next(MF.begin()) == MF.end())
     return false;
 
-    if (!ForceBlockShuffling || isFuzzed(fuzz::BPU, NumBlockShufflingEntry)) {
-        return false;
+    if (!ForceBlockShuffling && !isFuzzed(fuzz::BPU, NumBlockShufflingEntry) && !isFuzzed(fuzz::L1I, NumBlockShufflingEntry)) {
+      return false;
     }
-
-    NumBlockShufflingEntry++;
 
     if (!RNG) {
       RNG = std::move(MF.getFunction().getParent()->createRNG("MBB_shuffling"));
@@ -144,7 +142,10 @@ bool MachineBlockShuffling::runOnMachineFunction(MachineFunction &MF) {
     std::vector<MachineBasicBlock*> blocks{};
     blocks.reserve(MF.size());
 
-    std::for_each(MF.begin()++, MF.end(), [&blocks](MachineBasicBlock &bb){ blocks.push_back(&bb); });
+    for (MachineBasicBlock &bb : MF) {
+      blocks.push_back(&bb);
+    }
+
     std::shuffle(blocks.begin() + 1, blocks.end(), *RNG);
 
     for (size_t i = 0; i < blocks.size(); i++) {

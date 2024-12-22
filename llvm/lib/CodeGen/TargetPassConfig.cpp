@@ -1543,9 +1543,7 @@ void TargetPassConfig::addBlockPlacement() {
 }
 
 void TargetPassConfig::addBlockShuffling() {
-  if (addPass(&MachineBlockShufflingID)) {
-  
-  }
+  addPass(&MachineBlockShufflingID);
 }
 
 //===---------------------------------------------------------------------===//
