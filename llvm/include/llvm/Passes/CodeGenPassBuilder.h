@@ -16,6 +16,7 @@
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
@@ -69,6 +70,7 @@
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/CodeGen.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -84,11 +86,23 @@
 #include "llvm/Transforms/Scalar/ScalarizeMaskedMemIntrin.h"
 #include "llvm/Transforms/Utils/EntryExitInstrumenter.h"
 #include "llvm/Transforms/Utils/LowerInvoke.h"
+#include "llvm/CompilerAssistedFuzzing/FuzzInfo.h"
+
 #include <cassert>
 #include <type_traits>
 #include <utility>
 
+
 namespace llvm {
+
+#define DEBUG_TYPE "codegen-pass-builder"
+
+ALWAYS_ENABLED_STATISTIC(NumBlockShufflingEntry, "Number of times MachineBlockShuffling was called");
+
+static cl::opt<bool>
+    ForceBlockShuffling("block-shuffling",
+                       cl::desc("Force basic blocks shuffling."),
+                       cl::init(false), cl::Hidden);
 
 // FIXME: Dummy target independent passes definitions that have not yet been
 // ported to new pass manager. Once they do, remove these.
@@ -452,6 +466,8 @@ protected:
 
   /// Add standard basic block placement passes.
   void addBlockPlacement(AddMachinePass &) const;
+
+  void addBlockShuffling(AddMachinePass &) const;
 
   using CreateMCStreamer =
       std::function<Expected<std::unique_ptr<MCStreamer>>(MCContext &)>;
@@ -960,6 +976,9 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   if (getOptLevel() != CodeGenOptLevel::None)
     derived().addBlockPlacement(addPass);
 
+  if (ForceBlockShuffling || isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
+    derived().addBlockShuffling(addPass);
+
   // Insert before XRay Instrumentation.
   addPass(FEntryInserterPass());
 
@@ -1183,6 +1202,12 @@ void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockPlacement(
   // Run a separate pass to collect block placement statistics.
   if (Opt.EnableBlockPlacementStats)
     addPass(MachineBlockPlacementStatsPass());
+}
+
+template <typename Derived, typename TargetMachineT>
+void CodeGenPassBuilder<Derived, TargetMachineT>::addBlockShuffling(
+    AddMachinePass &addPass) const {
+  addPass(MachineBlockShufflingPass());
 }
 
 } // namespace llvm

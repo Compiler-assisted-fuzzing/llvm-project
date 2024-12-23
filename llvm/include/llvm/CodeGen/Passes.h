@@ -301,6 +301,9 @@ namespace llvm {
   /// probabilities.
   extern char &MachineBlockPlacementID;
 
+  // MachineBlockShuffling - This pass shuffles basic blocks
+  extern char &MachineBlockShufflingID;
+
   /// MachineBlockPlacementStats - This pass collects statistics about the
   /// basic block placement using branch probabilities and block frequency
   /// information.

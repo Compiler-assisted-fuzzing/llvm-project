@@ -1192,6 +1192,8 @@ void TargetPassConfig::addMachinePasses() {
   if (getOptLevel() != CodeGenOptLevel::None)
     addBlockPlacement();
 
+  addBlockShuffling();
+
   // Insert before XRay Instrumentation.
   addPass(&FEntryInserterID);
 
@@ -1538,6 +1540,10 @@ void TargetPassConfig::addBlockPlacement() {
     if (EnableBlockPlacementStats)
       addPass(&MachineBlockPlacementStatsID);
   }
+}
+
+void TargetPassConfig::addBlockShuffling() {
+  addPass(&MachineBlockShufflingID);
 }
 
 //===---------------------------------------------------------------------===//
