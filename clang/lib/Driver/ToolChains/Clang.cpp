@@ -7669,6 +7669,9 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
       StatsFile.assign(Output.getFilename());
       llvm::sys::path::replace_extension(StatsFile, "stats");
     }
+    CmdArgs.push_back(Args.MakeArgString(Twine("-stats-file=") + StatsFile));
+    if (D.CCPrintInternalStats)
+      CmdArgs.push_back("-stats-file-append");
   }
 
   // Forward -Xclang arguments to -cc1, and -mllvm arguments to the LLVM option
