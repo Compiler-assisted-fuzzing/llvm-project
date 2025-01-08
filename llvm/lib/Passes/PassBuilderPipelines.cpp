@@ -56,6 +56,7 @@
 #include "llvm/Transforms/IPO/ExpandVariadics.h"
 #include "llvm/Transforms/IPO/ForceFunctionAttrs.h"
 #include "llvm/Transforms/IPO/FunctionAttrs.h"
+#include "llvm/Transforms/IPO/GlobalDataExtraction.h"
 #include "llvm/Transforms/IPO/GlobalDCE.h"
 #include "llvm/Transforms/IPO/GlobalOpt.h"
 #include "llvm/Transforms/IPO/GlobalSplit.h"
@@ -152,6 +153,8 @@ using namespace llvm;
 
 ALWAYS_ENABLED_STATISTIC(BBExtractionRegisterFuzzStat,
                          "Basic block extraction pass register.");
+ALWAYS_ENABLED_STATISTIC(GlobalDataExtractionRegisterFuzzStat,
+                         "Global data extraction pass register.");
 
 static cl::opt<InliningAdvisorMode> UseInlineAdvisor(
     "enable-ml-inliner", cl::init(InliningAdvisorMode::Default), cl::Hidden,
@@ -1560,6 +1563,10 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   // L1I caches fuzzing pass
   if (isFuzzed(fuzz::L1I, BBExtractionRegisterFuzzStat))
     MPM.addPass(BasicBlocksExtractionPass());
+
+  // L1D caches fuzzing passes
+  if (isFuzzed(fuzz::L1D, GlobalDataExtractionRegisterFuzzStat))
+    MPM.addPass(GlobalDataExtractionPass());
 
   // Search the code for similar regions of code. If enough similar regions can
   // be found where extracting the regions into their own function will decrease

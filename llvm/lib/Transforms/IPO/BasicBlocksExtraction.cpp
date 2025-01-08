@@ -370,6 +370,17 @@ bool BasicBlocksExtraction::run(Module &M) {
     LLVM_DEBUG(llvm::dbgs() << "Outlining in " << F.getName() << "\n");
     Changed |= outlineRegions(F);
   }
+
+  unsigned long SectionsCount = 1;
+  for (auto &G : M.globals()) {
+    if (!G.getSection().empty()) // Don't modify unique sections
+      continue;
+    if (G.getLinkage() != GlobalValue::LinkageTypes::ExternalLinkage)
+      continue;
+    G.setSection(".globalVariable.fuzz" + std::to_string(SectionsCount));
+    SectionsCount++;
+  }
+
   return Changed;
 }
 
