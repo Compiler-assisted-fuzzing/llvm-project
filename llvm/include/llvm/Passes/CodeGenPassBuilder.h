@@ -978,6 +978,7 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
 
   if (ForceBlockShuffling || isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
     derived().addBlockShuffling(addPass);
+    NumBlockShufflingEntry -= 2; // Do not increment this stat here, increment it directly in the pass instead.
 
   // Insert before XRay Instrumentation.
   addPass(FEntryInserterPass());
