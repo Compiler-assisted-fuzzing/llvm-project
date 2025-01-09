@@ -34,6 +34,7 @@ extern Component ISel;
 extern Component Alloca;
 extern Component BPU;
 extern Component L1I;
+extern Component L1D;
 
 bool isFuzzed(fuzz::Component &Comp, llvm::TrackingStatistic &Stat);
 int64_t fuzzedIntRange(fuzz::Component &Comp, llvm::TrackingStatistic &Stat,
