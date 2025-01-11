@@ -64,7 +64,6 @@
 #include "llvm/TargetParser/RISCVISAInfo.h"
 #include "llvm/TargetParser/RISCVTargetParser.h"
 #include <cctype>
-#include <iostream>
 
 using namespace clang::driver;
 using namespace clang::driver::tools;
@@ -8119,7 +8118,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
           CmdArgs.push_back("-hot-cold-split=true");
         }
         CmdArgs.push_back("-noop-insertion");
-        break;
+      }
+      if (ActualOpt.str() == "l1i" || ActualOpt.str() == "all") {
+        CmdArgs.push_back("-mcmodel=large");
+        CmdArgs.push_back("-mrelocation-model");
+        CmdArgs.push_back("static");
       }
     }
 
