@@ -15,6 +15,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/CallGraphSCCPass.h"
 #include "llvm/Analysis/ScopedNoAliasAA.h"
@@ -49,11 +50,17 @@
 #include "llvm/Transforms/ObjCARC.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/CompilerAssistedFuzzing/FuzzInfo.h"
+
 #include <cassert>
 #include <optional>
 #include <string>
 
 using namespace llvm;
+
+#define DEBUG_TYPE "target-pass-config"
+
+ALWAYS_ENABLED_STATISTIC(NumBlockShufflingEntry, "Number of times MachineBlockShuffling was called");
 
 static cl::opt<bool>
     EnableIPRA("enable-ipra", cl::init(false), cl::Hidden,
@@ -1192,7 +1199,8 @@ void TargetPassConfig::addMachinePasses() {
   if (getOptLevel() != CodeGenOptLevel::None)
     addBlockPlacement();
 
-  addBlockShuffling();
+  if (isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
+    addBlockShuffling();
 
   // Insert before XRay Instrumentation.
   addPass(&FEntryInserterID);

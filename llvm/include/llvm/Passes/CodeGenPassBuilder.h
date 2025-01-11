@@ -99,11 +99,6 @@ namespace llvm {
 
 ALWAYS_ENABLED_STATISTIC(NumBlockShufflingEntry, "Number of times MachineBlockShuffling was called");
 
-static cl::opt<bool>
-    ForceBlockShuffling("block-shuffling",
-                       cl::desc("Force basic blocks shuffling."),
-                       cl::init(false), cl::Hidden);
-
 // FIXME: Dummy target independent passes definitions that have not yet been
 // ported to new pass manager. Once they do, remove these.
 #define DUMMY_FUNCTION_PASS(NAME, PASS_NAME)                                   \
@@ -976,7 +971,7 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
   if (getOptLevel() != CodeGenOptLevel::None)
     derived().addBlockPlacement(addPass);
 
-  if (ForceBlockShuffling || isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
+  if (isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
     derived().addBlockShuffling(addPass);
 
   // Insert before XRay Instrumentation.
