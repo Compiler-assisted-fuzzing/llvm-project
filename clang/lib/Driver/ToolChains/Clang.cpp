@@ -8091,7 +8091,7 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     }
 
     llvm::SmallVector<StringRef> CorrectOpts = {
-        "all", "scheduler", "mbb-placement", "regalloc", "isel", "alloca", "bpu", "l1i"};
+        "all", "scheduler", "mbb-placement", "regalloc", "isel", "alloca", "bpu", "l1i", "l1d"};
 
     // TODO: Two following for-loops can be combined.
     for (const auto &ActualOpt : ActualOpts)

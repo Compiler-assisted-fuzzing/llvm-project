@@ -29,9 +29,10 @@ Component fuzz::RegAlloc("regalloc");
 Component fuzz::ISel("isel");
 Component fuzz::Alloca("alloca");
 Component fuzz::L1I("l1i");
-std::array<std::reference_wrapper<Component>, 7> Components{
+Component fuzz::L1D("l1d");
+std::array<std::reference_wrapper<Component>, 8> Components{
     fuzz::Scheduler, fuzz::MBBPlacement, fuzz::RegAlloc, fuzz::ISel,
-    fuzz::Alloca, fuzz::BPU, fuzz::L1I};
+    fuzz::Alloca, fuzz::BPU, fuzz::L1I, fuzz::L1D};
 
 inline bool isCompUsed(const Component &Comp) {
   if (FuzzComponents.find("all") != std::string::npos)
