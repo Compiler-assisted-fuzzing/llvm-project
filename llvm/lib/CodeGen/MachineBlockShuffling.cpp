@@ -134,6 +134,8 @@ bool MachineBlockShuffling::runOnMachineFunction(MachineFunction &MF) {
       return false;
     }
 
+    NumBlockShufflingEntry--; // due to double-increment in isFuzzed checks
+
     if (!RNG) {
       RNG = std::move(MF.getFunction().getParent()->createRNG("MBB_shuffling"));
     }

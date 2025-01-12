@@ -8140,6 +8140,11 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
     std::string FuzzSeedArgStr = "-fuzz-seed=";
     const char *FuzzSeedArg = Args.MakeArgStringRef(FuzzSeedArgStr + StrSeed);
     CmdArgs.push_back(FuzzSeedArg);
+
+    // Specify rng seed when in fuzzing mode.
+    // Machine basic block shuffling algorithm relies on llvm rng instead of fuzz seed for implementation reasons.
+    CmdArgs.push_back("-mllvm");
+    CmdArgs.push_back(Args.MakeArgString("-rng-seed=" + StrSeed));
   }
 
   if (D.CC1Main && !D.CCGenDiagnostics) {
