@@ -46,6 +46,7 @@
 #include "llvm/Transforms/IPO/Annotation2Metadata.h"
 #include "llvm/Transforms/IPO/ArgumentPromotion.h"
 #include "llvm/Transforms/IPO/Attributor.h"
+#include "llvm/Transforms/IPO/BasicBlocksDynamicExecution.h"
 #include "llvm/Transforms/IPO/BasicBlocksExtraction.h"
 #include "llvm/Transforms/IPO/CalledValuePropagation.h"
 #include "llvm/Transforms/IPO/ConstantMerge.h"
@@ -151,6 +152,8 @@ using namespace llvm;
 
 #define DEBUG_TYPE "passbuilderpipelines"
 
+ALWAYS_ENABLED_STATISTIC(BBDynamicExecutionRegisterFuzzStat,
+                         "Basic blocks dynamic execution pass register.");
 ALWAYS_ENABLED_STATISTIC(BBExtractionRegisterFuzzStat,
                          "Basic block extraction pass register.");
 ALWAYS_ENABLED_STATISTIC(GlobalDataExtractionRegisterFuzzStat,
@@ -1567,6 +1570,9 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   // L1D caches fuzzing passes
   if (isFuzzed(fuzz::L1D, GlobalDataExtractionRegisterFuzzStat))
     MPM.addPass(GlobalDataExtractionPass());
+
+  if (isFuzzed(fuzz::L1I, BBDynamicExecutionRegisterFuzzStat))
+    MPM.addPass(BasicBlocksDynamicExecutionPass());
 
   // Search the code for similar regions of code. If enough similar regions can
   // be found where extracting the regions into their own function will decrease
