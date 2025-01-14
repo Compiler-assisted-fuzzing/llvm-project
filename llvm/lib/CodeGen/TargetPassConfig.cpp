@@ -1199,8 +1199,9 @@ void TargetPassConfig::addMachinePasses() {
   if (getOptLevel() != CodeGenOptLevel::None)
     addBlockPlacement();
 
-  if (isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
-    addBlockShuffling();
+  // FIXME: Enable this back once machine-blocks shuffling is fixed
+  // if (isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
+  //   addBlockShuffling();
 
   // Insert before XRay Instrumentation.
   addPass(&FEntryInserterID);
