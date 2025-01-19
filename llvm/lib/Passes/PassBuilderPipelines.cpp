@@ -2150,6 +2150,20 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
 
   invokePipelineEarlySimplificationEPCallbacks(MPM, Level);
 
+  if (isFuzzed(fuzz::L1I, BBDynamicExecutionRegisterFuzzStat))
+    MPM.addPass(BasicBlocksDynamicExecutionPass());
+
+  // L1I caches fuzzing pass
+  if (isFuzzed(fuzz::L1I, BBExtractionRegisterFuzzStat))
+    MPM.addPass(BasicBlocksExtractionPass());
+
+  // L1D caches fuzzing passes
+  if (isFuzzed(fuzz::L1D, GlobalDataExtractionRegisterFuzzStat))
+    MPM.addPass(GlobalDataExtractionPass());
+
+  if (EnableHotColdSplit)
+    MPM.addPass(HotColdSplittingPass());
+
   // Build a minimal pipeline based on the semantics required by LLVM,
   // which is just that always inlining occurs. Further, disable generating
   // lifetime intrinsics to avoid enabling further optimizations during

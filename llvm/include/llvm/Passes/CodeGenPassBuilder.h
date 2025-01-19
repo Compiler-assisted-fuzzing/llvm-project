@@ -968,8 +968,7 @@ Error CodeGenPassBuilder<Derived, TargetMachineT>::addMachinePasses(
     addPass(NoopInsertionPass());
 
   // Basic block placement.
-  if (getOptLevel() != CodeGenOptLevel::None)
-    derived().addBlockPlacement(addPass);
+  derived().addBlockPlacement(addPass);
 
   // FIXME: Enable this back once machine-blocks shuffling is fixed
   // if (isFuzzed(fuzz::BPU, NumBlockShufflingEntry) || isFuzzed(fuzz::L1I, NumBlockShufflingEntry))
